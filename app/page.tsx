@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 
-// Bikin tipe data User agar TypeScript tidak bingung
 interface User {
   id: number;
   username: string;
@@ -10,23 +9,20 @@ interface User {
 }
 
 export default function Home() {
-  // State untuk form (POST)
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState('');
 
-  // State untuk daftar user (GET)
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Fungsi Async untuk mengambil semua user dari Spring Boot
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
       const response = await fetch('http://localhost:8080/api/users');
       if (response.ok) {
         const data = await response.json();
-        setUsers(data); // Simpan data dari database ke dalam state
+        setUsers(data);
       } else {
         console.error('Gagal mengambil data dari server');
       }
@@ -37,12 +33,10 @@ export default function Home() {
     }
   };
 
-  // Jalankan fetchUsers otomatis saat halaman pertama kali dibuka
   useEffect(() => {
     fetchUsers();
   }, []);
 
-  // Fungsi untuk mengirim data baru (POST)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus('Mengirim data...');
@@ -57,25 +51,23 @@ export default function Home() {
       });
 
       if (response.ok) {
-        setStatus('✅ User berhasil ditambahkan!');
+        setStatus('User berhasil ditambahkan!');
         setUsername(''); // Kosongkan input form
         setEmail('');
 
-        // SANGAT PENTING: Ambil ulang data agar tabel otomatis update!
         fetchUsers();
       } else {
-        setStatus('❌ Gagal menambahkan user.');
+        setStatus('Gagal menambahkan user.');
       }
     } catch (error) {
       console.error(error);
-      setStatus('❌ Error: Gagal terhubung ke Backend.');
+      setStatus('Error: Gagal terhubung ke Backend.');
     }
   };
 
   return (
       <main className="flex flex-col items-center min-h-screen p-8 bg-gray-50 text-gray-900 gap-8">
 
-        {/* --- BAGIAN FORM (POST) --- */}
         <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
           <h1 className="text-2xl font-bold mb-6 text-center">Tambah User Yomu</h1>
 
