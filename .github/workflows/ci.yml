@@ -1,6 +1,5 @@
-name: Frontend CI
+name: Frontend CI with SonarCloud
 
-# Kapan script ini harus berjalan?
 on:
   push:
     branches: [ "main", "staging" ]
@@ -8,12 +7,14 @@ on:
     branches: [ "main", "staging" ]
 
 jobs:
-  build-and-test:
+  build-and-scan:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -24,8 +25,14 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run ESLint
+      - name: Run Linter (ESLint)
         run: npm run lint
 
       - name: Build Next.js App
         run: npm run build
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@v4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
