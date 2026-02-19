@@ -1,65 +1,156 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useEffect } from 'react';
+
+// Bikin tipe data User agar TypeScript tidak bingung
+interface User {
+  id: number;
+  username: string;
+  email: string;
+}
 
 export default function Home() {
+  // State untuk form (POST)
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [status, setStatus] = useState('');
+
+  // State untuk daftar user (GET)
+  const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Fungsi Async untuk mengambil semua user dari Spring Boot
+  const fetchUsers = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('http://localhost:8080/api/users');
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data); // Simpan data dari database ke dalam state
+      } else {
+        console.error('Gagal mengambil data dari server');
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Jalankan fetchUsers otomatis saat halaman pertama kali dibuka
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  // Fungsi untuk mengirim data baru (POST)
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatus('Mengirim data...');
+
+    try {
+      const response = await fetch('http://localhost:8080/api/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, email }),
+      });
+
+      if (response.ok) {
+        setStatus('✅ User berhasil ditambahkan!');
+        setUsername(''); // Kosongkan input form
+        setEmail('');
+
+        // SANGAT PENTING: Ambil ulang data agar tabel otomatis update!
+        fetchUsers();
+      } else {
+        setStatus('❌ Gagal menambahkan user.');
+      }
+    } catch (error) {
+      console.error(error);
+      setStatus('❌ Error: Gagal terhubung ke Backend.');
+    }
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+      <main className="flex flex-col items-center min-h-screen p-8 bg-gray-50 text-gray-900 gap-8">
+
+        {/* --- BAGIAN FORM (POST) --- */}
+        <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+          <h1 className="text-2xl font-bold mb-6 text-center">Tambah User Yomu</h1>
+
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Username</label>
+              <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                  placeholder="Masukkan username"
+                  required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Email</label>
+              <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                  placeholder="Masukkan email"
+                  required
+              />
+            </div>
+
+            <button
+                type="submit"
+                className="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded hover:bg-blue-700 transition duration-200 mt-2"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+              Kirim ke Database
+            </button>
+          </form>
+
+          {status && (
+              <div className="mt-4 p-3 bg-gray-100 rounded text-center text-sm font-medium">
+                {status}
+              </div>
+          )}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {/* --- BAGIAN DAFTAR USER (GET) --- */}
+        <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-2xl">
+          <h2 className="text-xl font-bold mb-4 text-center">Daftar User di Database</h2>
+
+          {isLoading ? (
+              <p className="text-center text-gray-500">Memuat data...</p>
+          ) : users.length === 0 ? (
+              <p className="text-center text-gray-500">Belum ada user di database.</p>
+          ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                  <tr className="bg-gray-100 border-b">
+                    <th className="p-3">ID</th>
+                    <th className="p-3">Username</th>
+                    <th className="p-3">Email</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  {users.map((user) => (
+                      <tr key={user.id} className="border-b hover:bg-gray-50">
+                        <td className="p-3">{user.id}</td>
+                        <td className="p-3 font-medium">{user.username}</td>
+                        <td className="p-3 text-gray-600">{user.email}</td>
+                      </tr>
+                  ))}
+                  </tbody>
+                </table>
+              </div>
+          )}
         </div>
+
       </main>
-    </div>
   );
 }
