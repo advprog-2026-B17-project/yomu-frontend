@@ -1,0 +1,33 @@
+name: Continuous Deployment (Dummy)
+
+on:
+  push:
+    branches: [ "main", "staging" ]
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Simulasi Login ke Server/Cloud
+        run: |
+          echo "Menghubungkan ke server cloud..."
+          sleep 2
+          echo "Berhasil login ke server!"
+
+      - name: Simulasi Build & Persiapan Rilis
+        run: |
+          echo "Menyiapkan file untuk production..."
+          sleep 3
+          echo "Build selesai!"
+
+      - name: Simulasi Deploy Aplikasi
+        run: |
+          echo "Mengirim kode ke server (Dummy Deploy)..."
+          sleep 2
+          echo "DEPLOYMENT BERHASIL!"
+          echo "Aplikasi dapat diakses di: https://yomu-app.dummy-url.com"
