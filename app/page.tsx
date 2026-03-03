@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
 interface User {
   id: number;
   username: string;
@@ -19,7 +21,9 @@ export default function Home() {
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:8080/api/users');
+      // 2. GANTI STRING KERAS DENGAN VARIABEL (Pakai backticks ` `)
+      const response = await fetch(`${API_BASE_URL}/api/users`);
+      
       if (response.ok) {
         const data = await response.json();
         setUsers(data);
@@ -42,7 +46,8 @@ export default function Home() {
     setStatus('Mengirim data...');
 
     try {
-      const response = await fetch('http://localhost:8080/api/users', {
+      // 3. GANTI DI SINI JUGA
+      const response = await fetch(`${API_BASE_URL}/api/users`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -52,10 +57,9 @@ export default function Home() {
 
       if (response.ok) {
         setStatus('User berhasil ditambahkan!');
-        setUsername(''); // Kosongkan input form
+        setUsername(''); 
         setEmail('');
-
-        fetchUsers();
+        fetchUsers(); // Refresh data table
       } else {
         setStatus('Gagal menambahkan user.');
       }
@@ -68,8 +72,14 @@ export default function Home() {
   return (
       <main className="flex flex-col items-center min-h-screen p-8 bg-gray-50 text-gray-900 gap-8">
 
+        {/* --- FORM INPUT --- */}
         <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
           <h1 className="text-2xl font-bold mb-6 text-center">Tambah User Yomu</h1>
+          
+          {/* Tampilkan indikator kita sedang connect kemana (Opsional, buat debug aja) */}
+          <p className="text-xs text-gray-400 text-center mb-4">
+            Connecting to: {API_BASE_URL}
+          </p>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
@@ -105,18 +115,20 @@ export default function Home() {
           </form>
 
           {status && (
-              <div className="mt-4 p-3 bg-gray-100 rounded text-center text-sm font-medium">
+              <div className={`mt-4 p-3 rounded text-center text-sm font-medium ${
+                status.includes('Error') || status.includes('Gagal') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+              }`}>
                 {status}
               </div>
           )}
         </div>
 
-        {/* --- BAGIAN DAFTAR USER (GET) --- */}
+        {/* --- TABEL DAFTAR USER --- */}
         <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-2xl">
           <h2 className="text-xl font-bold mb-4 text-center">Daftar User di Database</h2>
 
           {isLoading ? (
-              <p className="text-center text-gray-500">Memuat data...</p>
+              <p className="text-center text-gray-500 animate-pulse">Memuat data...</p>
           ) : users.length === 0 ? (
               <p className="text-center text-gray-500">Belum ada user di database.</p>
           ) : (
@@ -132,7 +144,7 @@ export default function Home() {
                   <tbody>
                   {users.map((user) => (
                       <tr key={user.id} className="border-b hover:bg-gray-50">
-                        <td className="p-3">{user.id}</td>
+                        <td className="p-3 text-gray-500 text-sm">{user.id}</td>
                         <td className="p-3 font-medium">{user.username}</td>
                         <td className="p-3 text-gray-600">{user.email}</td>
                       </tr>
