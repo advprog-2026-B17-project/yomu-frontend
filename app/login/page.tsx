@@ -29,10 +29,9 @@ export default function Login() {
       const res = await api.post('/auth/login', data);
       localStorage.setItem('token', res.data.token);
       
-      // Gunakan router.push agar tidak reload halaman (SPA style)
       router.push('/profile');
-      router.refresh(); // Pastikan state server-side ter-update
-    } catch (err) {
+      router.refresh();
+    } catch {
       alert("Login gagal, silakan cek kembali kredensial Anda.");
     }
   };

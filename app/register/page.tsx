@@ -4,10 +4,10 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import axios from 'axios';
 import * as z from 'zod';
 import api from '@/lib/axios';
 
-// 1. Skema Validasi
 const registerSchema = z.object({
   username: z.string().min(3, "Username minimal 3 karakter"),
   email: z.string().email("Format email tidak valid"),
@@ -20,7 +20,6 @@ export default function Register() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  // 2. React Hook Form
   const {
     register,
     handleSubmit,
@@ -30,14 +29,18 @@ export default function Register() {
   });
 
   const onSubmit = async (data: RegisterInput) => {
-    setError(null);
-    try {
-      await api.post('/auth/register', data);
-      router.push('/login?registered=true');
-    } catch (err: any) {
+  setError(null);
+  try {
+    await api.post('/auth/register', data);
+    router.push('/login?registered=true');
+  } catch (err: unknown) { 
+    if (axios.isAxiosError(err)) {
       setError(err.response?.data?.message || 'Registrasi gagal, coba lagi.');
+    } else {
+      setError('Terjadi kesalahan yang tidak terduga.');
     }
-  };
+  }
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
