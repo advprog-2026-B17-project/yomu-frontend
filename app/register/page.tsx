@@ -10,8 +10,13 @@ import api from '@/lib/axios';
 
 const registerSchema = z.object({
   username: z.string().min(3, "Username minimal 3 karakter"),
-  email: z.string().email("Format email tidak valid"),
+  displayName: z.string().min(1, "Nama tampilan wajib diisi"),
+  email: z.string().email("Format email tidak valid").or(z.literal("")),
+  phoneNumber: z.string().min(8, "Nomor HP minimal 8 digit").or(z.literal("")),
   password: z.string().min(8, "Password minimal 8 karakter"),
+}).refine((data) => data.email !== "" || data.phoneNumber !== "", {
+  message: "Email atau Nomor HP wajib diisi salah satu",
+  path: ["email"],
 });
 
 type RegisterInput = z.infer<typeof registerSchema>;
@@ -29,18 +34,25 @@ export default function Register() {
   });
 
   const onSubmit = async (data: RegisterInput) => {
-  setError(null);
-  try {
-    await api.post('/auth/register', data);
-    router.push('/login?registered=true');
-  } catch (err: unknown) { 
-    if (axios.isAxiosError(err)) {
-      setError(err.response?.data?.message || 'Registrasi gagal, coba lagi.');
-    } else {
-      setError('Terjadi kesalahan yang tidak terduga.');
+    setError(null);
+    try {
+      const payload = {
+        username: data.username,
+        displayName: data.displayName,
+        email: data.email || null,
+        phoneNumber: data.phoneNumber || null,
+        password: data.password,
+      };
+      await api.post('/auth/register', payload);
+      router.push('/login?registered=true');
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.message || 'Registrasi gagal, coba lagi.');
+      } else {
+        setError('Terjadi kesalahan yang tidak terduga.');
+      }
     }
-  }
-};
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
@@ -59,7 +71,7 @@ export default function Register() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
             <input
               {...register("username")}
-              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 outline-none transition-all ${
+              className={`w-full px-4 py-2 border text-gray-800 rounded-lg focus:ring-2 outline-none transition-all placeholder:text-gray-400 ${
                 errors.username ? "border-red-500 focus:ring-red-200" : "focus:ring-indigo-500"
               }`}
               placeholder="Username unik"
@@ -68,16 +80,40 @@ export default function Register() {
           </div>
 
           <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Nama Tampilan</label>
+            <input
+              {...register("displayName")}
+              className={`w-full px-4 py-2 border text-gray-800 rounded-lg focus:ring-2 outline-none transition-all placeholder:text-gray-400 ${
+                errors.displayName ? "border-red-500 focus:ring-red-200" : "focus:ring-indigo-500"
+              }`}
+              placeholder="Nama yang ditampilkan"
+            />
+            {errors.displayName && <p className="text-red-500 text-xs mt-1">{errors.displayName.message}</p>}
+          </div>
+
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <input
               type="email"
               {...register("email")}
-              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 outline-none transition-all ${
+              className={`w-full px-4 py-2 border text-gray-800 rounded-lg focus:ring-2 outline-none transition-all placeholder:text-gray-400 ${
                 errors.email ? "border-red-500 focus:ring-red-200" : "focus:ring-indigo-500"
               }`}
-              placeholder="nama@email.com"
+              placeholder="nama@email.com (opsional)"
             />
             {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Nomor HP</label>
+            <input
+              {...register("phoneNumber")}
+              className={`w-full px-4 py-2 border text-gray-800 rounded-lg focus:ring-2 outline-none transition-all placeholder:text-gray-400 ${
+                errors.phoneNumber ? "border-red-500 focus:ring-red-200" : "focus:ring-indigo-500"
+              }`}
+              placeholder="08xxxxxxxxxx (opsional)"
+            />
+            {errors.phoneNumber && <p className="text-red-500 text-xs mt-1">{errors.phoneNumber.message}</p>}
           </div>
 
           <div>
@@ -85,13 +121,17 @@ export default function Register() {
             <input
               type="password"
               {...register("password")}
-              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 outline-none transition-all ${
+              className={`w-full px-4 py-2 border text-gray-800 rounded-lg focus:ring-2 outline-none transition-all placeholder:text-gray-400 ${
                 errors.password ? "border-red-500 focus:ring-red-200" : "focus:ring-indigo-500"
               }`}
               placeholder="Min. 8 karakter"
             />
             {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
           </div>
+
+          <p className="text-xs text-gray-500 text-center">
+            * Email atau Nomor HP wajib diisi salah satu
+          </p>
 
           <button
             type="submit"
