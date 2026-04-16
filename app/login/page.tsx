@@ -29,7 +29,7 @@ export default function Login() {
       const res = await api.post('/auth/login', data);
       localStorage.setItem('token', res.data.token);
       
-      router.push('/profile');
+      router.push('/texts');
       router.refresh();
     } catch {
       alert("Login gagal, silakan cek kembali kredensial Anda.");
