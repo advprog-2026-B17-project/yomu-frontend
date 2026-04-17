@@ -3,11 +3,11 @@
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import axios from 'axios';
 import * as z from 'zod';
 import api from '@/lib/axios';
-
 const loginSchema = z.object({
-  identifier: z.string().min(1, "Email atau nomor HP wajib diisi"),
+  identifier: z.string().min(1, "Username/Email/Phone wajib diisi"),
   password: z.string().min(1, "Password wajib diisi"),
 });
 
@@ -26,13 +26,23 @@ export default function Login() {
 
   const onSubmit = async (data: LoginInput) => {
     try {
-      const res = await api.post('/auth/login', data);
+      console.log("Login attempt:", { identifier: data.identifier });
+      const res = await api.post('/auth/login', {
+        identifier: data.identifier,
+        password: data.password,
+      });
+      console.log("Login success:", res.data);
       localStorage.setItem('token', res.data.token);
-
-      router.push('/profile');
+      
+      router.push('/texts');
       router.refresh();
-    } catch {
-      alert("Login gagal, silakan cek kembali kredensial Anda.");
+    } catch (err: unknown) {
+      console.error("Login error:", err);
+      if (axios.isAxiosError(err)) {
+        alert(`Login gagal: ${err.response?.status} - ${JSON.stringify(err.response?.data)}`);
+      } else {
+        alert("Login gagal, silakan cek kembali kredensial Anda.");
+      }
     }
   };
 
@@ -43,11 +53,21 @@ export default function Login() {
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email atau Nomor HP</label>
-            <input
+            <label className="block text-sm font-medium text-gray-700 mb-1">Username / Email / No. HP</label>
+            <input 
               {...register("identifier")}
-              className="w-full px-4 py-2 border text-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all placeholder:text-gray-400"
-              placeholder="nama@email.com atau 081234567890"
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+              placeholder="Masukkan username, email, atau nomor HP" 
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <input 
+              type="password"
+              {...register("password")}
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+              placeholder="••••••••" 
             />
           </div>
 
