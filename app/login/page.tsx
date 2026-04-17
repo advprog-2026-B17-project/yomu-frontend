@@ -3,11 +3,11 @@
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import axios from 'axios';
 import * as z from 'zod';
 import api from '@/lib/axios';
-
 const loginSchema = z.object({
-  username: z.string().min(1, "Username wajib diisi"),
+  identifier: z.string().min(1, "Username/Email/Phone wajib diisi"),
   password: z.string().min(1, "Password wajib diisi"),
 });
 
@@ -26,13 +26,23 @@ export default function Login() {
 
   const onSubmit = async (data: LoginInput) => {
     try {
-      const res = await api.post('/auth/login', data);
+      console.log("Login attempt:", { identifier: data.identifier });
+      const res = await api.post('/auth/login', {
+        identifier: data.identifier,
+        password: data.password,
+      });
+      console.log("Login success:", res.data);
       localStorage.setItem('token', res.data.token);
       
       router.push('/texts');
       router.refresh();
-    } catch {
-      alert("Login gagal, silakan cek kembali kredensial Anda.");
+    } catch (err: unknown) {
+      console.error("Login error:", err);
+      if (axios.isAxiosError(err)) {
+        alert(`Login gagal: ${err.response?.status} - ${JSON.stringify(err.response?.data)}`);
+      } else {
+        alert("Login gagal, silakan cek kembali kredensial Anda.");
+      }
     }
   };
 
@@ -43,11 +53,11 @@ export default function Login() {
         
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Username / Email / No. HP</label>
             <input 
-              {...register("username")}
+              {...register("identifier")}
               className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-              placeholder="Masukkan username" 
+              placeholder="Masukkan username, email, atau nomor HP" 
             />
           </div>
           
