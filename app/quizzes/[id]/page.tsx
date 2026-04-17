@@ -2,6 +2,7 @@
 
 import React, { use, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { AxiosError } from "axios";
 import Layout from "@/components/Layout";
 import api from "@/lib/axios";
 
@@ -18,12 +19,21 @@ type Quiz = {
   questions: Question[];
 };
 
+type GradingResult = {
+  questionId: number;
+  isCorrect: boolean;
+  score: number;
+  feedback: string;
+  correctAnswer: string;
+  userAnswer: string;
+};
+
 type QuizAttemptResult = {
   attemptId: number;
   score: number | null;
   startedAt: string;
   submittedAt: string | null;
-  gradingResults: any[] | null;
+  gradingResults: GradingResult[] | null;
 };
 
 type Answer = {
@@ -61,8 +71,13 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
       const res = await api.post(`/api/quizzes/${quiz.id}/start`);
       const attemptData: QuizAttemptResult = res.data;
       setAttempt(attemptData);
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.error || err.response?.data?.message || err.message;
+    } catch (err: unknown) {
+      const error = err as AxiosError<{ error?: string; message?: string }> | Error;
+      const errorMessage = error instanceof AxiosError
+        ? error.response?.data?.error || error.response?.data?.message || error.message
+        : error instanceof Error
+        ? error.message
+        : 'Unknown error';
       if (errorMessage.includes("already completed") || errorMessage.includes("You have already completed this quiz") || errorMessage.includes("sudah")) {
         setError("Anda sudah menyelesaikan kuis ini sebelumnya. Setiap teks hanya dapat dikerjakan sekali.");
       } else {
@@ -90,8 +105,14 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
         answers: answerList,
       });
       router.push(`/quizzes/${id}/result?attemptId=${attempt.attemptId}`);
-    } catch (err: any) {
-      setError(err.response?.data?.error || err.response?.data?.message || "Gagal mengirim jawaban");
+    } catch (err: unknown) {
+      const error = err as AxiosError<{ error?: string; message?: string }> | Error;
+      const errorMsg = error instanceof AxiosError
+        ? error.response?.data?.error || error.response?.data?.message
+        : error instanceof Error
+        ? error.message
+        : 'Gagal mengirim jawaban';
+      setError(errorMsg || "Gagal mengirim jawaban");
     } finally {
       setSubmitting(false);
     }

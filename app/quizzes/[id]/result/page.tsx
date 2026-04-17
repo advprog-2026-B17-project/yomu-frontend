@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
+import { AxiosError } from "axios";
 import Layout from "@/components/Layout";
 import api from "@/lib/axios";
 
@@ -65,8 +66,14 @@ export default function QuizResultPage({ params }: { params: Promise<{ id: strin
         const attemptRes = await api.get(`/api/quizzes/attempts/${attemptId}`);
         const attemptData: QuizAttemptResult = attemptRes.data;
         setAttempt(attemptData);
-      } catch (err: any) {
-        setError(err.response?.data?.message || err.message || "Gagal mengambil hasil kuis");
+      } catch (err: unknown) {
+        const error = err as AxiosError<{ message?: string }> | Error;
+        const errorMsg = error instanceof AxiosError
+          ? error.response?.data?.message || error.message
+          : error instanceof Error
+          ? error.message
+          : "Gagal mengambil hasil kuis";
+        setError(errorMsg || "Gagal mengambil hasil kuis");
       } finally {
         setLoading(false);
       }
