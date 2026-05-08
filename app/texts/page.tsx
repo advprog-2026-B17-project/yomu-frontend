@@ -12,7 +12,7 @@ type TextSummary = {
   quizzes?: { id: number; title: string }[];
 };
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 async function fetchTexts(): Promise<{ content: TextSummary[] }> {
   const res = await fetch(`${API_BASE}/api/texts?page=0&size=20`, { 
