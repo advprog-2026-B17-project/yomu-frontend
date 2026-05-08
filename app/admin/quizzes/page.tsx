@@ -5,20 +5,17 @@ import Layout from '@/components/Layout';
 import api from '@/lib/axios';
 
 type TextSummary = { id: number; title: string };
+type Quiz = { id: number; title: string; totalQuestions?: number };
 
 export default function AdminQuizzesPage() {
   const [texts, setTexts] = useState<TextSummary[]>([]);
   const [selectedTextId, setSelectedTextId] = useState<number | null>(null);
-  const [quizzes, setQuizzes] = useState<any[]>([]);
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [title, setTitle] = useState('');
   const [questionText, setQuestionText] = useState('');
   const [kind, setKind] = useState('multiple_choice');
   const [options, setOptions] = useState('');
   const [correctAnswer, setCorrectAnswer] = useState('');
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => { fetchTexts(); }, []);
-  useEffect(() => { if (selectedTextId) fetchQuizzes(selectedTextId); else setQuizzes([]); }, [selectedTextId]);
 
   async function fetchTexts() {
     try {
@@ -27,7 +24,6 @@ export default function AdminQuizzesPage() {
     } catch (err) {
       console.error(err);
     }
-    setLoading(false);
   }
 
   async function fetchQuizzes(textId: number) {
@@ -39,6 +35,11 @@ export default function AdminQuizzesPage() {
       setQuizzes([]);
     }
   }
+
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { fetchTexts(); }, []);
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { if (selectedTextId) fetchQuizzes(selectedTextId); else setQuizzes([]); }, [selectedTextId]);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -59,7 +60,7 @@ export default function AdminQuizzesPage() {
       await api.post(`/api/admin/texts/${selectedTextId}/quizzes`, payload);
       setTitle(''); setQuestionText(''); setOptions(''); setCorrectAnswer('');
       fetchQuizzes(selectedTextId);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(err);
       alert('Failed to create quiz');
     }
@@ -70,7 +71,7 @@ export default function AdminQuizzesPage() {
     try {
       await api.delete(`/api/admin/quizzes/${quizId}`);
       if (selectedTextId) fetchQuizzes(selectedTextId);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(err);
       alert('Failed to delete');
     }

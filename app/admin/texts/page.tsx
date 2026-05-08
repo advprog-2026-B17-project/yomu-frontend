@@ -31,21 +31,21 @@ export default function AdminTextsPage() {
     try {
       const res = await api.get('/api/texts?page=0&size=100');
       const data = res.data;
-      const items: TextWithStats[] = (data.content || []).map((t: any) => ({ ...t }));
+      const items: TextWithStats[] = (data.content || []).map((t: TextWithStats) => ({ ...t }));
       // fetch stats for each text
       await Promise.all(items.map(async (t) => {
         try {
           const s = await api.get(`/api/texts/${t.id}/stats`);
           t.attempts = s.data.attempts;
           t.avgScore = s.data.avgScore;
-        } catch (err) {
+        } catch {
           t.attempts = 0;
           t.avgScore = 0;
         }
       }));
 
       setTexts(items);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
       setError('Gagal memuat daftar teks');
     } finally {
@@ -62,7 +62,7 @@ export default function AdminTextsPage() {
       setCategory('');
       setContent('');
       fetchTexts();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
       setError('Gagal membuat teks');
     }
@@ -73,7 +73,7 @@ export default function AdminTextsPage() {
     try {
       await api.delete(`/api/admin/texts/${id}`);
       fetchTexts();
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(err);
       setError('Gagal menghapus teks');
     }
